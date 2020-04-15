@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: "k8sbi01"
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: "k8sbi01"
+    spec:
+      containers:
+        - name: "k8sbi01"
+          image: "a0101.azurecr.io/k8sbi01"
+          ports:
+          - containerPort: 9090

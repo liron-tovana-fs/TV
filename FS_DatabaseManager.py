@@ -1,24 +1,31 @@
-import pyodbc
-import pandas as pd
-
-CONNECTION_STRING_TOVANA = 'DRIVER={ODBC Driver 13 for SQL Server};SERVER=beaver;' \
-                    'DATABASE=T1;User ID=sa;Password=1qaz!QAZ;Trusted_Connection=yes;'
-CONNECTION_STRING_CUSTOMER = 'DRIVER={ODBC Driver 13 for SQL Server};SERVER=beaver\sql2016;' \
-                             'DATABASE=Astea_SGI_NRC_BI_DW;User ID=sa;\Password=1qaz!QAZ;Trusted_Connection=yes'
+import enum
+import FS_SQLManager as fssql
+import FS_AzureTableManager as fsazuretable
 
 
-def execute_query(query, is_commit=False):
-    sql_conn = pyodbc.connect(CONNECTION_STRING_TOVANA)
-    cursor = sql_conn.cursor()
-    cursor.execute(query)
-
-    if is_commit is not True:
-        return cursor.fetchone()
-    else:
-        sql_conn.commit()
+class Provider(enum.Enum):
+    MS_SQL = 1
+    AZURE_TABLE_STORAGE = 2
 
 
-def get_dataframe(query):
-    sql_conn = pyodbc.connect(CONNECTION_STRING_CUSTOMER)
+class DatabaseManager:
+    def __init__(self, provider):
+        self.__provider = provider
 
-    return pd.read_sql(query, sql_conn)
+    def save_answer(self, answer_id, question_id, user_id, result):
+        print("Provider is", self.__provider)
+        if self.__provider == Provider.MS_SQL:
+            fssql.save_answer(answer_id, question_id, user_id, result)
+        else:
+            fsazuretable.save_answer(answer_id, question_id, user_id, result)
+
+    def get_dataframe(self, query):
+        print("Provider is", self.__provider)
+        if self.__provider == Provider.MS_SQL:
+            return fssql.get_dataframe(query)
+        else:
+            return fsazuretable.get_dataframe(query)
+
+
+def execute_query(query):
+    return fssql.execute_query(query)

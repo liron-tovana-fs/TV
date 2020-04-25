@@ -12,6 +12,7 @@ import json
 import enum
 import FS_DatabaseManager
 import FS_DateManager
+from FS_DatabaseManager import Provider
 
 
 class AggregateFunction(enum.Enum):
@@ -84,7 +85,7 @@ def get_dataframe(question_id, filter=None):
 
     print ("@@FS_shared.get_dataframe", selected_query)
 
-    return FS_DatabaseManager.get_dataframe(selected_query)
+    return FS_DatabaseManager.DatabaseManager(Provider.MS_SQL).get_dataframe(selected_query)
 
 
 def get_question_parameters(question_id):
@@ -100,12 +101,12 @@ def get_question_parameters(question_id):
     param_dict = {}
     for key in parameters:
         if key == 'parameters':
-            print '@@@@@'
+            print('@@@@@')
             for parameter in parameters[key]:
                 for key_parameter in parameter:
                     param_dict[key_parameter] = parameter[key_parameter]
 
-    print ("@@FS_shared.get_question_parameters.param_dict", param_dict)
+    print("@@FS_shared.get_question_parameters.param_dict", param_dict)
 
     return param_dict
 
@@ -199,11 +200,7 @@ class Result:
         json_string = json_string[:-1]
         json_string += "]}"
 
-        query = "INSERT INTO T1.dbo.FS_answers (answer_id, question_id, created_by, created_at, result)" \
-                " VALUES('" + get_answer_id(self.question_id) + "', '" + self.question_id + "', '" + self.user_id + "','" + \
-                FS_DateManager.get_today().strftime("%Y-%m-%d %H:%M:%S") + "', '" + json_string + "')"
+        print("@@FS_shared.save_answer", get_answer_id(self.question_id), self.question_id, self.user_id, json_string)
 
-        print ("@@FS_shared.save_result", query)
-
-        FS_DatabaseManager.execute_query(query, True)
+        FS_DatabaseManager.DatabaseManager(Provider.AZURE_TABLE_STORAGE).save_answer(get_answer_id(self.question_id), self.question_id, self.user_id, json_string)
 
